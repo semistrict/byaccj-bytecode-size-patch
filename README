@@ -11,3 +11,13 @@ $ make linux
 
 Which should produce an executable inside the src/ directory called `yacc.linux'.
 
+License
+=======
+
+Licensing details for the original BYACC/J source code can be found on their
+website [http://byaccj.sourceforge.net] and/or in applicable source files.
+
+My changes are placed in the public domain and of course, I make no representations
+that this code will work as intended or at all. Indeed, it may even cause your 
+computer to explode and collapse the economy of a small south asian state.
+
