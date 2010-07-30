@@ -3,6 +3,9 @@
 
 #include "defs.h"
 
+#define MAX_ELEMENTS_IN_JAVA_METHODS 1000
+#define MAX_ELEMENTS_ON_A_LINE 30
+
 static int nvectors;
 static int nentries;
 static short **froms;
@@ -668,7 +671,41 @@ int i, j;
     FREE(base);
 }
 
-
+void output_java_short_array(short *table, int len, char *basename)
+{
+    int i;
+    int j;
+    int functionIndex = 0;
+    fprintf(output_file, "static short[] %s = create_%s();\n", basename, basename);
+    for (i = 0; i < len; i++) {
+        if (i % MAX_ELEMENTS_IN_JAVA_METHODS == 0) {
+            if (i != 0) {
+                fprintf(output_file, "};\n}\n");
+            }
+            fprintf(output_file, "private static short[] create_%s%d() {\n", basename, functionIndex);
+            functionIndex++;
+            fprintf(output_file, "return new short[] {\n");
+        } else {
+            fprintf(output_file, ", ");
+            if (i % MAX_ELEMENTS_ON_A_LINE == MAX_ELEMENTS_ON_A_LINE - 1) {
+                fprintf(output_file, "\n");
+            }
+        }
+        fprintf(output_file, "%d", check[i]);
+    }
+    fprintf(output_file, "};\n}\n");
+    fprintf(output_file, "private static short[] create_%s() {\n", basename);
+    for (i = 0; i < functionIndex; i++) {
+        fprintf(output_file, "short[] %s%d = create_%s%d();\n", basename, i, basename, i);
+    }
+    fprintf(output_file, "short[] new_%s = new short[%d];\n", basename, len);
+    fprintf(output_file, "int next = 0;\n");
+    for (i = 0; i < functionIndex; i++) {
+        fprintf(output_file, "System.arraycopy(%s%d, 0, new_%s, next, %s%d.length);\n", basename, i, basename, basename, i);
+        fprintf(output_file, "next += %s%d.length;\n", basename, i);
+    }
+    fprintf(output_file, "return new_%s;\n}\n", basename);
+}
 
 void output_table(void)
 {
@@ -678,68 +715,65 @@ int j;
     ++outline;
     if (jflag)  /*rwj*/
       {
-      fprintf(code_file, "final static int YYTABLESIZE=%d;\n", high);
-      fprintf(output_file, "static short yytable[];\nstatic { yytable();}\nstatic void yytable(){\nyytable = new short[]{%27d,", table[0]);
+          fprintf(code_file, "final static int YYTABLESIZE=%d;\n", high);
+          output_java_short_array(table, high + 1, "yytable");
       }
     else
       {
-      fprintf(code_file, "#define YYTABLESIZE %d\n", high);
-      fprintf(output_file, "short yytable[] = {%40d,", table[0]);
+          fprintf(code_file, "#define YYTABLESIZE %d\n", high);
+          fprintf(output_file, "short yytable[] = {%40d,", table[0]);
+          
+    
+        j = 10;
+        for (i = 1; i <= high; i++)
+        {
+        if (j >= 10)
+        {
+            if (!rflag) ++outline;
+            putc('\n', output_file);
+            j = 1;
+        }
+        else
+            ++j;
+    
+        fprintf(output_file, "%5d,", table[i]);
+        }
+    
+        if (!rflag) outline += 2;
+        fprintf(output_file, "\n};\n");
       }
-
-    j = 10;
-    for (i = 1; i <= high; i++)
-    {
-	if (j >= 10)
-	{
-	    if (!rflag) ++outline;
-	    putc('\n', output_file);
-	    j = 1;
-	}
-	else
-	    ++j;
-
-	fprintf(output_file, "%5d,", table[i]);
-    }
-
-    if (!rflag) outline += 2;
-    fprintf(output_file, "\n};\n");
-    if (jflag)
-      fprintf(output_file, "}\n");
     FREE(table);
 }
-
-
 
 void output_check(void)
 {
     register int i;
     register int j;
-
-    if (jflag)   /*rwj*/
-      fprintf(output_file, "static short yycheck[];\nstatic { yycheck(); }\nstatic void yycheck() {\nyycheck = new short[] {%27d,",check[0]);
-    else
-      fprintf(output_file, "short yycheck[] = {%40d,", check[0]);
-
-    j = 10;
-    for (i = 1; i <= high; i++)
-    {
-	if (j >= 10)
-	{
-	    if (!rflag) ++outline;
-	    putc('\n', output_file);
-	    j = 1;
-	}
-	else
-	    ++j;
-
-	fprintf(output_file, "%5d,", check[i]);
+    int functionIndex = 0;
+    
+    if (jflag) {
+        output_java_short_array(check, high + 1, "yycheck");
+    } else {
+        fprintf(output_file, "short yycheck[] = {%40d,", check[0]);
+    
+        j = 10;
+        for (i = 1; i <= high; i++)
+        {
+            if (j >= 10)
+            {
+                if (!rflag) ++outline;
+                putc('\n', output_file);
+                j = 1;
+            }
+            else
+                ++j;
+    
+            fprintf(output_file, "%5d,", check[i]);
+        }
+    
+        if (!rflag) outline += 2;
+        fprintf(output_file, "\n};\n");
     }
-
-    if (!rflag) outline += 2;
-    fprintf(output_file, "\n};\n");
-    if (jflag)
-      fprintf(output_file, "}\n");
     FREE(check);
 }
 
