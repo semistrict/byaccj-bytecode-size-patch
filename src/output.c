@@ -671,7 +671,7 @@ int i, j;
     FREE(base);
 }
 
-void output_java_short_array(short *table, int len, char *basename)
+void output_java_short_array(short *stable, int len, char *basename)
 {
     int i;
     int j;
@@ -691,7 +691,7 @@ void output_java_short_array(short *table, int len, char *basename)
                 fprintf(output_file, "\n");
             }
         }
-        fprintf(output_file, "%d", check[i]);
+        fprintf(output_file, "%d", stable[i]);
     }
     fprintf(output_file, "};\n}\n");
     fprintf(output_file, "private static short[] create_%s() {\n", basename);
