@@ -1,0 +1,7 @@
+*~
+/src/*.o
+/src/yacc.linux
+/src/yacc.irix
+/src/yacc.solaris
+/src/yacc.exe
+/byaccj
